@@ -3112,7 +3112,7 @@ THREE.FBXLoader = ( function () {
 
 			// if the line doesn't end in ',' we have reached the end of the property value
 			// so convert the string to an array
-			if ( line.slice( - 1 ) !== ',' ) {
+			if ( !line.match( /,[\s\t]*$/ ) ) {
 
 				currentNode.a = parseNumberArray( currentNode.a );
 
