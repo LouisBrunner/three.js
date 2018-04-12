@@ -15,6 +15,12 @@ THREE.SSAOShader = {
 
 	uniforms: {
 
+		"samples":   	{ value: 64 },
+		"useNoise":     { value: true },
+		"noiseAmount":  { value: 0.0004 },
+		"diffArea": 	{ value: 0.4 },
+		"gDisplace":	{ value: 0.4 },
+
 		"tDiffuse":     { value: null },
 		"tDepth":       { value: null },
 		"size":         { value: new THREE.Vector2( 512, 512 ) },
@@ -68,13 +74,21 @@ THREE.SSAOShader = {
 
 		// user variables
 
-		"const int samples = 64;",     // ao sample count
+		"uniform int samples;",         // ao sample count
 
-		"const bool useNoise = true;",      // use noise instead of pattern for sample dithering
-		"const float noiseAmount = 0.0004;", // dithering amount
+		"uniform bool useNoise;",       // use noise instead of pattern for sample dithering
+		"uniform float noiseAmount;",   // dithering amount
 
-		"const float diffArea = 0.4;",   // self-shadowing reduction
-		"const float gDisplace = 0.4;",  // gauss bell center
+		"uniform float diffArea;",      // self-shadowing reduction
+		"uniform float gDisplace;",     // gauss bell center
+
+		// "const int samples = 64;",     // ao sample count
+
+		// "const bool useNoise = true;",      // use noise instead of pattern for sample dithering
+		// "const float noiseAmount = 0.0004;", // dithering amount
+
+		// "const float diffArea = 0.4;",   // self-shadowing reduction
+		// "const float gDisplace = 0.4;",  // gauss bell center
 
 
 		// RGBA depth
@@ -195,7 +209,8 @@ THREE.SSAOShader = {
 			"float l = 0.0;",
 			"float z = 1.0 - dz / 2.0;",
 
-			"for ( int i = 0; i <= samples; i ++ ) {",
+			"for ( int i = 0; i <= 1000000; i ++ ) {",
+                "if ( i == samples ) { break; }",
 
 				"float r = sqrt( 1.0 - z );",
 
@@ -210,13 +225,14 @@ THREE.SSAOShader = {
 			"ao /= float( samples );",
 			"ao = 1.0 - ao;",
 
-			"vec3 color = texture2D( tDiffuse, vUv ).rgb;",
+			"vec4 color = texture2D( tDiffuse, vUv );",
+			"vec3 colorRGB = color.rgb;",
 
 			"vec3 lumcoeff = vec3( 0.299, 0.587, 0.114 );",
-			"float lum = dot( color.rgb, lumcoeff );",
+			"float lum = dot( colorRGB, lumcoeff );",
 			"vec3 luminance = vec3( lum );",
 
-			"vec3 final = vec3( color * mix( vec3( ao ), vec3( 1.0 ), luminance * lumInfluence ) );",  // mix( color * ao, white, luminance )
+			"vec3 final = vec3( colorRGB * mix( vec3( ao ), vec3( 1.0 ), luminance * lumInfluence ) );",  // mix( color * ao, white, luminance )
 
 			"if ( onlyAO ) {",
 
@@ -224,7 +240,7 @@ THREE.SSAOShader = {
 
 			"}",
 
-			"gl_FragColor = vec4( final, 1.0 );",
+			"gl_FragColor = vec4( final, color.a );",
 
 		"}"
 
